@@ -1,12 +1,12 @@
-# "App file"
 import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CsrfOnlyForm
 from models import db, connect_db, User, Message
+from werkzeug.exceptions import Unauthorized
 
 load_dotenv()
 
@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -37,10 +37,14 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-
     else:
         g.user = None
 
+@app.before_request
+def add_csrf_form_to_all_pages():
+    """Before every route, add CSRF-only form to global object."""
+
+    g.csrf_form = CsrfOnlyForm()
 
 def do_login(user):
     """Log in user."""
@@ -77,6 +81,7 @@ def signup():
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
             )
+            #TODO: add db.session.add(user)
             db.session.commit()
 
         except IntegrityError:
@@ -84,7 +89,7 @@ def signup():
             return render_template('users/signup.html', form=form)
 
         do_login(user)
-
+        #TODO: flash
         return redirect("/")
 
     else:
@@ -107,6 +112,7 @@ def login():
             return redirect("/")
 
         flash("Invalid credentials.", 'danger')
+        # TODO: redirect route and show form
 
     return render_template('users/login.html', form=form)
 
@@ -115,8 +121,15 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
+    if g.csrf_form.validate_on_submit():
+        do_logout()
+        flash("Successfully logged out!","success")
+        return redirect("/login")
+
+    else:
+        # didn't pass CSRF; ignore logout attempt
+        raise Unauthorized()
+
 
 
 ##############################################################################
@@ -130,6 +143,7 @@ def list_users():
     """
 
     search = request.args.get('q')
+    # breakpoint()
 
     if not search:
         users = User.query.all()
@@ -206,7 +220,7 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    # TODO:IMPLEMENT THIS
 
 
 @app.post('/users/delete')
@@ -216,6 +230,8 @@ def delete_user():
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
+    # TODO: maybe we have to delete all their messages/follows/followers,etc
 
     do_logout()
 
@@ -255,6 +271,7 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
+    #TODO: 404
     msg = Message.query.get(message_id)
     return render_template('messages/show.html', message=msg)
 
@@ -287,6 +304,7 @@ def homepage():
     """
 
     if g.user:
+        # TODO: filter by users followed
         messages = (Message
                     .query
                     .order_by(Message.timestamp.desc())
