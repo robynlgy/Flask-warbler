@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from forms import UserAddForm, LoginForm, MessageForm, CsrfOnlyForm
-from models import db, connect_db, User, Message
+from forms import UserAddForm, LoginForm, MessageForm, CsrfOnlyForm, EditProfileForm
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE, DEFAULT_IMAGE
 from werkzeug.exceptions import Unauthorized
 
 load_dotenv()
@@ -220,7 +220,34 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # TODO:IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = EditProfileForm(obj=g.user)
+
+    if form.validate_on_submit():
+        user = User.authenticate(form.username.data,
+                                 form.password.data)
+
+        if user:
+            user.username = form.username.data
+            user.email = form.email.data
+            user.bio = form.bio.data
+            user.image_url = form.image_url.data or DEFAULT_IMAGE
+            user.header_image_url = form.header_image_url.data or DEFAULT_HEADER_IMAGE
+
+            db.session.commit()
+
+            flash("Profile updated!", "success")
+            return redirect(f"/users/{g.user.id}")
+
+        flash("Invalid credentials.", 'danger')
+        return redirect("/")
+
+
+    return render_template('users/edit.html', form=form)
+
 
 
 @app.post('/users/delete')
@@ -302,11 +329,14 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-
+    
     if g.user:
-        # TODO: filter by users followed
+
+        following_ids = [following.id for following in g.user.following]
+        following_ids.append(g.user.id)
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())

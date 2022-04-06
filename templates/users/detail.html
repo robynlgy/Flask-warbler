@@ -2,9 +2,7 @@
 
 {% block content %}
 
-  <div id="warbler-hero" class="full-width">
-    <!-- TODO: -->
-    <img src="{{ user.header_image_url }}" alt="Header image for {{ user.username }}" class="img-fluid" id="profile-header">
+  <div id="warbler-hero" style="background-image: url('{{user.header_image_url}}')" class="full-width">
   </div>
   <img src="{{ user.image_url }}" alt="Image for {{ user.username }}" id="profile-avatar">
   <div class="row full-width">
