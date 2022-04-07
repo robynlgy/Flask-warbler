@@ -90,8 +90,10 @@ class User(db.Model):
         primaryjoin=(Follows.user_following_id == id),
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
-
-    liked_messages = db.relationship('Like')
+# "Messages table" need to go through "likes table" to get to "users table"
+    liked_messages = db.relationship('Messages',
+                        secondary = 'likes',
+                        backref = 'users')
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"

@@ -58,12 +58,18 @@
               <p>
                 <a href="/messages/{{ msg.id }}"  style="text-decoration:none; color:inherit">{{ msg.text }}</a>
               </p>
-              <form action="/messages/{{ msg.id }}/like" method="post">
-                {{ g.csrf_form.hidden_tag() }}
-                <button style="background-color: inherit; border:none">
-                  <i class="far fa-star" aria-hidden="true"></i>
-                </button>
-              </form>
+              {% if msg.user.id != g.user.id %}
+                <form action="/messages/{{ msg.id }}/like" method="post">
+                  {{ g.csrf_form.hidden_tag() }}
+                    <button style="background-color: inherit; border:none">
+                      <!-- {% if msg in g.user.liked_messages %}
+                      <i class="far fa-star" aria-hidden="true"></i>
+                      {% else %}
+                      <i class="fas fa-star" aria-hidden="true"></i>
+                      {% endif %} -->
+                    </button>
+                </form>
+              {% endif %}
             </div>
           </li>
         {% endfor %}
@@ -72,3 +78,6 @@
 
   </div>
 {% endblock %}
+
+
+    <!-- # UI of the star - toggle class solid (fas) / empty (far) -->

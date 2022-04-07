@@ -325,8 +325,6 @@ def messages_like(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # check if message is already liked
-        # remote from db
     # or check if i wrote the message and dont let me like it :(
         # toggle hidden on star
     # UI of the star - toggle class solid (fas) / empty (far)
@@ -335,7 +333,7 @@ def messages_like(message_id):
         message = Message.query.get(message_id)
 
         # if message is liked, unlike by removing from database
-        if message_id in [message.message_id for message in g.user.liked_messages]:
+        if message in g.user.liked_messages:
             like = Like.query.get((g.user.id,message_id))
 
             # breakpoint()
