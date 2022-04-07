@@ -320,7 +320,7 @@ def messages_destroy(message_id):
 
 @app.post('/messages/<int:message_id>/like')
 def messages_like(message_id):
-    """Handle like."""
+    """Handle like and unlike."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
