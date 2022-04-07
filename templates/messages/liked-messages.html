@@ -1,0 +1,36 @@
+{% extends 'users/detail.html' %}
+{% block user_details %}
+<div class="col-sm-6">
+  <ul class="list-group" id="messages">
+
+    {% for liked_message in user.liked_messages %}
+
+    <li class="list-group-item">
+
+
+      <a href="/users/{{ liked_message.user_id }}">
+        <img src="{{ liked_message.author.image_url }}" alt="user image" class="timeline-image">
+      </a>
+
+      <div class="message-area">
+        <a href="/users/{{ liked_message.author.id }}">@{{ liked_message.author.username }}</a>
+        <span class="text-muted">
+          {{ liked_message.timestamp.strftime('%d %B %Y') }}
+        </span>
+        <a href="/messages/{{ liked_message.id }}" style="color:black; text-decoration: none">
+          <p>{{ liked_message.text }}</p>
+        </a>
+
+        <form action="/messages/{{ liked_message.id }}/like" method="post">
+          {{ g.csrf_form.hidden_tag() }}
+          <button style="background-color: inherit; border:none">
+            <i class="fas fa-star" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+
+  </ul>
+</div>
+{% endblock %}

@@ -40,11 +40,13 @@ def add_user_to_g():
     else:
         g.user = None
 
+
 @app.before_request
 def add_csrf_form_to_all_pages():
     """Before every route, add CSRF-only form to global object."""
 
     g.csrf_form = CsrfOnlyForm()
+
 
 def do_login(user):
     """Log in user."""
@@ -81,7 +83,7 @@ def signup():
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
             )
-            #TODO: add db.session.add(user)
+
             db.session.commit()
 
         except IntegrityError:
@@ -89,7 +91,7 @@ def signup():
             return render_template('users/signup.html', form=form)
 
         do_login(user)
-        #TODO: flash
+
         return redirect("/")
 
     else:
@@ -112,7 +114,6 @@ def login():
             return redirect("/")
 
         flash("Invalid credentials.", 'danger')
-        # TODO: redirect route and show form
 
     return render_template('users/login.html', form=form)
 
@@ -123,13 +124,12 @@ def logout():
 
     if g.csrf_form.validate_on_submit():
         do_logout()
-        flash("Successfully logged out!","success")
+        flash("Successfully logged out!", "success")
         return redirect("/login")
 
     else:
         # didn't pass CSRF; ignore logout attempt
         raise Unauthorized()
-
 
 
 ##############################################################################
@@ -245,9 +245,7 @@ def profile():
         flash("Invalid credentials.", 'danger')
         return redirect("/")
 
-
     return render_template('users/edit.html', form=form)
-
 
 
 @app.post('/users/delete')
@@ -258,12 +256,15 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # TODO: maybe we have to delete all their messages/follows/followers,etc
-
     do_logout()
+
+    Message.query.filter_by(user_id=g.user.id).delete()
+    db.session.commit()
 
     db.session.delete(g.user)
     db.session.commit()
+
+    flash("User deleted.", "success")
 
     return redirect("/signup")
 
@@ -298,8 +299,7 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    #TODO: 404
-    msg = Message.query.get(message_id)
+    msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg)
 
 
@@ -317,6 +317,7 @@ def messages_destroy(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+
 @app.post('/messages/<int:message_id>/like')
 def messages_like(message_id):
     """Handle like."""
@@ -325,38 +326,42 @@ def messages_like(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # or check if i wrote the message and dont let me like it :(
-        # toggle hidden on star
-    # UI of the star - toggle class solid (fas) / empty (far)
-
     if g.csrf_form.validate_on_submit():
         message = Message.query.get(message_id)
 
         # if message is liked, unlike by removing from database
         if message in g.user.liked_messages:
-            like = Like.query.get((g.user.id,message_id))
+            like = Like.query.get((g.user.id, message_id))
 
-            # breakpoint()
             db.session.delete(like)
             db.session.commit()
 
             flash('Deleted like!')
-            return redirect('/')
+            return redirect(request.referrer)
 
-
-        like = Like(user_id=g.user.id,message_id=message_id)
+        like = Like(user_id=g.user.id, message_id=message_id)
 
         db.session.add(like)
         db.session.commit()
 
         flash("Liked")
-        return redirect('/')
+        return redirect(request.referrer)
 
     else:
         # didn't pass CSRF; ignore logout attempt
         raise Unauthorized()
 
 
+@app.get('/users/<int:user_id>/liked-messages')
+def show_liked_messages(user_id):
+    """Show list of liked messages of this user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('messages/liked-messages.html', user=user)
 
 
 ##############################################################################
