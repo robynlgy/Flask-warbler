@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, CsrfOnlyForm, EditProfileForm
-from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE, DEFAULT_IMAGE
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE, DEFAULT_IMAGE, Like
 from werkzeug.exceptions import Unauthorized
 
 load_dotenv()
@@ -317,6 +317,49 @@ def messages_destroy(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+@app.post('/messages/<int:message_id>/like')
+def messages_like(message_id):
+    """Handle like."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    # check if message is already liked
+        # remote from db
+    # or check if i wrote the message and dont let me like it :(
+        # toggle hidden on star
+    # UI of the star - toggle class solid (fas) / empty (far)
+
+    if g.csrf_form.validate_on_submit():
+        message = Message.query.get(message_id)
+
+        # if message is liked, unlike by removing from database
+        if message_id in [message.message_id for message in g.user.liked_messages]:
+            like = Like.query.get((g.user.id,message_id))
+
+            # breakpoint()
+            db.session.delete(like)
+            db.session.commit()
+
+            flash('Deleted like!')
+            return redirect('/')
+
+
+        like = Like(user_id=g.user.id,message_id=message_id)
+
+        db.session.add(like)
+        db.session.commit()
+
+        flash("Liked")
+        return redirect(f"/users/{g.user.id}")
+
+    else:
+        # didn't pass CSRF; ignore logout attempt
+        raise Unauthorized()
+
+
+
 
 ##############################################################################
 # Homepage and error pages
@@ -329,7 +372,7 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-    
+
     if g.user:
 
         following_ids = [following.id for following in g.user.following]
