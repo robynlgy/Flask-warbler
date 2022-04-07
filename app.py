@@ -350,7 +350,7 @@ def messages_like(message_id):
         db.session.commit()
 
         flash("Liked")
-        return redirect(f"/users/{g.user.id}")
+        return redirect('/')
 
     else:
         # didn't pass CSRF; ignore logout attempt

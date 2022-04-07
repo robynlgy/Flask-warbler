@@ -90,8 +90,8 @@ class User(db.Model):
         primaryjoin=(Follows.user_following_id == id),
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
-# "Messages table" need to go through "likes table" to get to "users table"
-    liked_messages = db.relationship('Messages',
+    # "Messages table" need to go through "likes table" to get to "users table"
+    liked_messages = db.relationship('Message',
                         secondary = 'likes',
                         backref = 'users')
 

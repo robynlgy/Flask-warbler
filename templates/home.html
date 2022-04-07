@@ -62,11 +62,11 @@
                 <form action="/messages/{{ msg.id }}/like" method="post">
                   {{ g.csrf_form.hidden_tag() }}
                     <button style="background-color: inherit; border:none">
-                      <!-- {% if msg in g.user.liked_messages %}
-                      <i class="far fa-star" aria-hidden="true"></i>
+                      {% if msg in g.user.liked_messages %}
+                        <i class="fas fa-star" aria-hidden="true"></i>
                       {% else %}
-                      <i class="fas fa-star" aria-hidden="true"></i>
-                      {% endif %} -->
+                        <i class="far fa-star" aria-hidden="true"></i>
+                      {% endif %}
                     </button>
                 </form>
               {% endif %}
