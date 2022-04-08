@@ -181,6 +181,8 @@ class Message(db.Model):
 
     author = db.relationship('User')
 
+    def __repr__(self):
+        return f"<Message #{self.id}: Content: {self.text}, Time: {self.timestamp}, By User#: {self.user_id}>"
 
 class Like(db.Model):
     """Connection of a user and messages the user liked."""

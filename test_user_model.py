@@ -31,7 +31,7 @@ db.create_all()
 
 
 class UserModelTestCase(TestCase):
-    """Test views for messages."""
+    """Test User Model."""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -39,7 +39,7 @@ class UserModelTestCase(TestCase):
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
-        # TODO: Likes?
+
 
         self.client = app.test_client()
 
@@ -70,18 +70,18 @@ class UserModelTestCase(TestCase):
     def test_user_model(self):
         """Does basic model work?"""
 
-        adduser = User(
+        add_user = User(
             email="testadd@test.com",
             username="testadduser",
             password="ADDHASHED_PASSWORD"
         )
 
-        db.session.add(adduser)
+        db.session.add(add_user)
         db.session.commit()
 
         # User should have no messages & no followers
-        self.assertEqual(len(adduser.messages), 0)
-        self.assertEqual(len(adduser.followers), 0)
+        self.assertEqual(len(add_user.messages), 0)
+        self.assertEqual(len(add_user.followers), 0)
 
     def test_user_repr(self):
         """Does the repr method work as expected"""
@@ -106,6 +106,7 @@ class UserModelTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertTrue(user.is_following(user2))
+            self.assertFalse(user2.is_following(user))
             # self.assertIn(user2,user.following)
 
 
@@ -130,6 +131,8 @@ class UserModelTestCase(TestCase):
 
             resp = c.post(f"/users/follow/{self.user_id}",
                         follow_redirects=True)
+
+            #TODO: think about how to write this test without flask/post.
 
             user = User.query.get(self.user_id)
             user2 = User.query.get(self.user_id2)
@@ -178,7 +181,6 @@ class UserModelTestCase(TestCase):
         """Does User.authenticate successfully return a user when given a valid username and password?"""
 
         authenticated_user = User.authenticate("testuser","HASHED_PASSWORD")
-
         user = User.query.get(self.user_id)
 
         self.assertEqual(authenticated_user,user)
