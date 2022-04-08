@@ -8,7 +8,7 @@ from app import app, CURR_USER_KEY, DEFAULT_IMAGE
 import os
 from unittest import TestCase
 
-from models import db, User, Message, Follows
+from models import db, User, Message, Follows, Like
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -99,28 +99,24 @@ class MessageModelTestCase(TestCase):
     def test_message_is_liked(self):
         """When message is liked, does it successfully commit to "likes" database table?"""
 
-        with self.client as c:
-            # with c.session_transaction() as change_session:
-            #     change_session[CURR_USER_KEY] = self.user_id
+        user = User.query.get(self.user_id)
+        user2 = User.query.get(self.user_id2)
+        msg = Message.query.get(self.message_id)
 
-            #TODO: manually write it so no need for flask. 
+        user2.liked_messages.append(msg)
+        db.session.commit()
 
-            resp = c.post(f"/users/follow/{self.user_id2}",
-                        follow_redirects=True)
+        self.assertIn(msg,user2.liked_messages)
+        self.assertNotIn(msg,user.liked_messages)
 
-            user = User.query.get(self.user_id)
-            user2 = User.query.get(self.user_id2)
+    def test_delete_message(self):
+        """Can user delete their own message?"""
 
-            self.assertEqual(resp.status_code, 200)
-            self.assertTrue(user.is_following(user2))
-            # self.assertIn(user2,user.following)
+        user = User.query.get(self.user_id)
+        msg = Message.query.get(self.message_id)
 
-# Does is_following successfully detect when user1 is following user2?
-# Does is_following successfully detect when user1 is not following user2?
-# Does is_followed_by successfully detect when user1 is followed by user2?
-# Does is_followed_by successfully detect when user1 is not followed by user2?
-# Does User.signup successfully create a new user given valid credentials?
-# Does User.signup fail to create a new user if any of the validations (eg uniqueness, non-nullable fields) fail?
-# Does User.authenticate successfully return a user when given a valid username and password?
-# Does User.authenticate fail to return a user when the username is invalid?
-# Does User.authenticate fail to return a user when the password is invalid?
+        Message.query.filter_by(id=self.message_id).delete()
+        db.session.commit()
+
+        self.assertNotIn(msg,user.messages)
+
