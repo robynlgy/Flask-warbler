@@ -112,6 +112,7 @@ class User(db.Model):
             user for user in self.following if user == other_user]
         return len(found_user_list) == 1
 
+
     @classmethod
     def signup(cls, username, email, password, image_url):
         """Sign up user.
@@ -200,6 +201,15 @@ class Like(db.Model):
         db.ForeignKey('messages.id', ondelete="cascade"),
         primary_key=True,
     )
+
+    # liked_msg = db.relationship('Message')
+    # TODO:
+    # def check_like(self):
+    #     """Is user liking the message not the author?"""
+
+    #     breakpoint()
+    #     self.user_id != self.liked_msg.author.id
+
 
 
 def connect_db(app):

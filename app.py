@@ -312,10 +312,14 @@ def messages_destroy(message_id):
         return redirect("/")
 
     msg = Message.query.get(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+    if msg.author == g.user:
+        db.session.delete(msg)
+        db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+        return redirect(f"/users/{g.user.id}")
+
+    flash("Access unauthorized.", "danger")
+    return redirect("/")
 
 
 @app.post('/messages/<int:message_id>/like')
@@ -325,6 +329,7 @@ def messages_like(message_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
 
     if g.csrf_form.validate_on_submit():
         message = Message.query.get(message_id)
@@ -344,6 +349,7 @@ def messages_like(message_id):
         db.session.add(like)
         db.session.commit()
 
+        # breakpoint()
         flash("Liked")
         return redirect(request.referrer)
 
