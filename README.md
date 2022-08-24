@@ -6,10 +6,13 @@
 
 Warbler is a full-stack Twitter clone application. Users can create an account, search for and follow/unfollow other users, like/dislike messages from other users, and perform CRUD operations on their own messages. Authorization is required to access the main contents of the app.
 
-View working demo [here](https://warbler-demo-050822.herokuapp.com/).
+View working demo [here](https://warbler-demo-050822.herokuapp.com/).  Username: testuser ,  Password: password 
+
 
 
 ![Home page](./static/screenshots/homepage.png "Homepage")
+
+
 
 ### Technologies
 - Python
